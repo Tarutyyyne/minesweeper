@@ -9,38 +9,39 @@ const isBombThere = (isthere: boolean): number => {
 };
 
 //初めてのクリックで爆弾を配置する関数
-const createMine = (
-  x: number,
-  y: number,
-  userInputs: number[][],
-  bombMap: number[][],
-): number[][] => {
-  //xとyをもとにuseInput.flat()のindexを生成
-  const makeIndex = (x: number, y: number): number => {
-    return y * 9 + x;
-  };
-  //一次元のbombArrayにランダムに1を入れる
-  const generateBombArray = (): number[][] => {
-    const bombArray: number[] = bombMap.flat(); //ランダムに処理
-    for (let i = 0; i < 10; i++) {
-      const randomX: number = Math.floor(Math.random() * 9);
-      const randomY: number = Math.floor(Math.random() * 9);
-      bombArray[makeIndex(randomX, randomY)] === isBombThere(true);
-    }
-    if (bombArray[makeIndex(x, y)] === isBombThere(false)) {
-      const reviveBombMap: number[][] = [];
-      reviveBombMap.push(bombArray.splice(0, 8));
-      return reviveBombMap;
-    } else {
-      generateBombArray();
-    }
-  };
-  //userInputsの要素が全て0ならばそれは初回と同義
-  if (userInputs.flat().filter((userInputs) => userInputs === isBombThere(false)).length === 0) {
-    const result = generateBombArray();
-  }
-  return result;
-};
+// const createBombMap = (
+//   x: number,
+//   y: number,
+//   userInputs: number[][],
+//   bombMap: number[][],
+// ): number[][] => {
+//   //xとyをもとにuseInput.flat()のindexを生成
+//   const makeIndex = (x: number, y: number): number => {
+//     return y * 9 + x;
+//   };
+//   const bombArray: number[] = bombMap.flat();
+//   const reviveBombMap: number[][] = [];
+//   //一次元のbombArrayにランダムに1を入れる
+//   // const generateBombArray = (): number[][] => {
+//   //   const bombArray: number[] = bombMap.flat(); //ランダムに処理
+//   //   for (let i = 0; i < 10; i++) {
+//   //     const randomX: number = Math.floor(Math.random() * 9);
+//   //     const randomY: number = Math.floor(Math.random() * 9);
+//   //     bombArray[makeIndex(randomX, randomY)] = isBombThere(true);
+//   //   }
+//   //   if (bombArray[makeIndex(x, y)] === isBombThere(false)) {
+//   //     const reviveBombMap: number[][] = [];
+//   //     for (let j = 0; j < 9; j++) {
+//   //       reviveBombMap.push(bombArray.slice(j * 9, (j + 1) * 9));
+//   //     }
+//   //     return reviveBombMap;
+//   //   } else {
+//   //     return generateBombArray();
+//   //   }
+//   //userInputsの要素が全て0ならばそれは初回と同義
+//   if (userInputs.flat().filter((userInputs) => userInputs === isBombThere(false)).length === 0) {
+//   }
+// };
 export default function Home() {
   const [userInputs, setUserInputs] = useState([
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -66,24 +67,32 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]);
+  const newBombMap = structuredClone(bombMap);
+  console.log(newBombMap);
 
-  const clickCell = (x: number, y: number, newUserInputs: number[][]) => {
+  const clickCell = (x: number, y: number, newUserInputs: number[][], newBombMap: number[][]) => {
     console.log('click');
-    setBombMap(createMine(x, y, userInputs, bombMap));
-    newUserInputs[y][x] = isBombThere(true);
+    //ここに配列にランダムに爆弾をいれる
+    const randomX: number = Math.floor(Math.random() * 9);
+    const randomY: number = Math.floor(Math.random() * 9);
+    console.log(randomX, randomY);
+    newBombMap[randomX][randomY] = isBombThere(true);
+
+    setBombMap(newBombMap);
+    newUserInputs[y][x] = 1;
     setUserInputs(newUserInputs);
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.userInputs}>
-        {bombMap.map((row, y) =>
+        {newUserInputs.map((row, y) =>
           row.map((column, x) => (
             <div
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
-              onClick={() => clickCell(y, x, newUserInputs)}
+              onClick={() => clickCell(x, y, newUserInputs, newBombMap)}
             >
               {column === isBombThere(true) ? isBombThere(true) : isBombThere(false)}
             </div>
