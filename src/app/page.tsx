@@ -8,6 +8,21 @@ const isBombThere = (isthere: boolean): number => {
   return isthere === true ? 1 : 0;
 };
 
+const initialExecute = (
+  userInputs: number[][],
+  newBombMap: number[][],
+  fn: (newBombMap: number[][]) => number[][],
+) => {
+  if (userInputs.flat().filter((userInputs) => userInputs === isBombThere(false)).length === 0) {
+    //ここに配列にランダムに爆弾をいれる
+    const randomX: number = Math.floor(Math.random() * 9);
+    const randomY: number = Math.floor(Math.random() * 9);
+    console.log(randomX, randomY);
+    newBombMap[randomX][randomY] = isBombThere(true);
+  }
+  fn(newBombMap);
+};
+
 //初めてのクリックで爆弾を配置する関数
 // const createBombMap = (
 //   x: number,
@@ -67,17 +82,29 @@ export default function Home() {
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
   ]);
-  const newBombMap = structuredClone(bombMap);
-  console.log(newBombMap);
+  const newBombMap: number[][] = structuredClone(bombMap);
 
-  const clickCell = (x: number, y: number, newUserInputs: number[][], newBombMap: number[][]) => {
-    console.log('click');
-    //ここに配列にランダムに爆弾をいれる
-    const randomX: number = Math.floor(Math.random() * 9);
-    const randomY: number = Math.floor(Math.random() * 9);
-    console.log(randomX, randomY);
-    newBombMap[randomX][randomY] = isBombThere(true);
-
+  const clickCell = (
+    x: number,
+    y: number,
+    userInputs: number[][],
+    newUserInputs: number[][],
+    newBombMap: number[][],
+  ) => {
+    //newBoardをいじるだけ
+    console.log(userInputs.flat().filter((i) => i === isBombThere(false)).length);
+    const countInputs: number = userInputs
+      .flat()
+      .filter((userInputs) => userInputs === isBombThere(false)).length;
+    console.log(countInputs);
+    if (countInputs === 90) {
+      //ここに配列にランダムに爆弾をいれる
+      for (let i = 0; i < 10; i++) {
+        const randomX: number = Math.floor(Math.random() * 9);
+        const randomY: number = Math.floor(Math.random() * 9);
+        newBombMap[randomX][randomY] = isBombThere(true);
+      }
+    }
     setBombMap(newBombMap);
     newUserInputs[y][x] = 1;
     setUserInputs(newUserInputs);
@@ -86,13 +113,13 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <div className={styles.userInputs}>
-        {newUserInputs.map((row, y) =>
+        {bombMap.map((row, y) =>
           row.map((column, x) => (
             <div
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
-              onClick={() => clickCell(x, y, newUserInputs, newBombMap)}
+              onClick={() => clickCell(x, y, userInputs, newUserInputs, newBombMap)}
             >
               {column === isBombThere(true) ? isBombThere(true) : isBombThere(false)}
             </div>
