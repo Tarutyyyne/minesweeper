@@ -8,19 +8,23 @@ const isBombThere = (isthere: boolean): number => {
   return isthere === true ? 1 : 0;
 };
 
-const initialExecute = (
-  userInputs: number[][],
-  newBombMap: number[][],
-  fn: (newBombMap: number[][]) => number[][],
-) => {
-  if (userInputs.flat().filter((userInputs) => userInputs === isBombThere(false)).length === 0) {
-    //ここに配列にランダムに爆弾をいれる
-    const randomX: number = Math.floor(Math.random() * 9);
-    const randomY: number = Math.floor(Math.random() * 9);
-    console.log(randomX, randomY);
-    newBombMap[randomX][randomY] = isBombThere(true);
-  }
-  fn(newBombMap);
+// const initialExecute = (
+//   userInputs: number[][],
+//   newBombMap: number[][],
+//   fn: (newBombMap: number[][]) => number[][],
+// ) => {
+//   if (userInputs.flat().filter((userInputs) => userInputs === isBombThere(false)).length === 0) {
+//     //ここに配列にランダムに爆弾をいれる
+//     const randomX: number = Math.floor(Math.random() * 9);
+//     const randomY: number = Math.floor(Math.random() * 9);
+//     console.log(randomX, randomY);
+//     newBombMap[randomX][randomY] = isBombThere(true);
+//   }
+//   fn(newBombMap);
+// };
+
+const makeIndex = (x: number, y: number): number => {
+  return y * 9 + x;
 };
 
 //初めてのクリックで爆弾を配置する関数
@@ -85,41 +89,56 @@ export default function Home() {
   const newBombMap: number[][] = structuredClone(bombMap);
 
   const clickCell = (
-    x: number,
-    y: number,
+    clickX: number,
+    clickY: number,
     userInputs: number[][],
     newUserInputs: number[][],
     newBombMap: number[][],
   ) => {
     //newBoardをいじるだけ
-    console.log(userInputs.flat().filter((i) => i === isBombThere(false)).length);
     const countInputs: number = userInputs
       .flat()
       .filter((userInputs) => userInputs === isBombThere(false)).length;
-    console.log(countInputs);
+    //if文の中は一回だけ実行
     if (countInputs === 90) {
-      //ここに配列にランダムに爆弾をいれる
-      for (let i = 0; i < 10; i++) {
-        const randomX: number = Math.floor(Math.random() * 9);
-        const randomY: number = Math.floor(Math.random() * 9);
-        newBombMap[randomX][randomY] = isBombThere(true);
+      //clickX,clickYを0とした配列をつくりたいのでこれはその差分
+      const zeroMeasure: number = makeIndex(clickX, clickY);
+      //randomX, randomYのリストを取得するためのプロセス
+      const randomIndexArray: number[] = Array.from(
+        { length: bombMap.flat().length - 1 },
+        (_, index) => index + 1,
+      ).filter((index) => index !== zeroMeasure);
+      console.log(randomIndexArray);
+      const copyRandomIndexArray: number[] = [];
+      for (let j = 0; j < 80; j++) {
+        const shuffleIndex = Math.floor(Math.random() * randomIndexArray.length);
+        copyRandomIndexArray.push(randomIndexArray[shuffleIndex]);
+        randomIndexArray.splice(shuffleIndex, 1);
+      }
+      const randomIndex: number[] = copyRandomIndexArray.splice(0, 10);
+      // console.log(randomIndex);
+      for (let k = 0; k < 10; k++) {
+        const randomY = randomIndex[k] % 9;
+        const randomX = Math.floor(randomIndex[k] / 9);
+        console.log(randomX, randomY);
+        newBombMap[randomY][randomX] = isBombThere(true);
       }
     }
     setBombMap(newBombMap);
-    newUserInputs[y][x] = 1;
+    newUserInputs[clickY][clickX] = 1;
     setUserInputs(newUserInputs);
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.userInputs}>
-        {bombMap.map((row, y) =>
-          row.map((column, x) => (
+        {bombMap.map((row, clickY) =>
+          row.map((column, clickX) => (
             <div
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
-              key={`${x}-${y}`}
-              onClick={() => clickCell(x, y, userInputs, newUserInputs, newBombMap)}
+              key={`${clickX}-${clickY}`}
+              onClick={() => clickCell(clickX, clickY, userInputs, newUserInputs, newBombMap)}
             >
               {column === isBombThere(true) ? isBombThere(true) : isBombThere(false)}
             </div>
