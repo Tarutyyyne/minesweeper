@@ -4,10 +4,11 @@ import { useState } from 'react';
 import styles from './page.module.css';
 
 //普通に定数にした。なぜわざわざ関数を作ったのだろうか。
+const HOW_MANY_BOMB = 10;
 const SAFE: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const BOMB = 9;
 const OPEN = 10;
-const FLAG = 20;
+const FLAG = 30;
 const QUESTION = FLAG * 2;
 const REMOVE = -(FLAG + QUESTION);
 
@@ -124,6 +125,25 @@ export default function Home() {
   };
   makeGameBoard(userInputs, bombMap);
 
+  //無事に全てめくれた時のための処理に使う定数
+  const detectWin = (newUserInputs: number[][], newBombMap: number[][]): boolean => {
+    const countClose: number = makeGameBoard(newUserInputs, newBombMap)
+      .flat()
+      .filter((bomb) => bomb % FLAG === BOMB).length; //%30===9
+    const countQuestion: number = makeGameBoard(newUserInputs, newBombMap)
+      .flat()
+      .filter((bomb) => (bomb % FLAG) + QUESTION === 0).length;
+    const answer: number = countClose - countQuestion;
+    const countOpen = makeGameBoard(newUserInputs, newBombMap)
+      .flat()
+      .filter((bomb) => OPEN <= bomb && bomb < FLAG).length;
+    if (answer + countOpen === 81) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   //ゼロ連鎖再帰関数
   const openZero = (
     clickX: number,
@@ -174,24 +194,26 @@ export default function Home() {
     setBombMap(newBombMap);
     //以下開く動作
     //旗と？があったら開かない
-    if (
-      makeGameBoard(newUserInputs, newBombMap)
-        .flat()
-        .includes(BOMB + OPEN + OPEN) === true
-    ) {
-      return;
-    }
-    if (userInputs[clickY][clickX] >= FLAG) {
-      return;
-    } else {
-      newUserInputs[clickY][clickX] = OPEN;
-      openZero(clickX, clickY, directions, newUserInputs, newBombMap);
+    if (detectWin(newUserInputs, newBombMap) === false) {
       if (
         makeGameBoard(newUserInputs, newBombMap)
           .flat()
-          .includes(BOMB + OPEN) === true
+          .includes(BOMB + OPEN + OPEN) === true
       ) {
-        openMine(userInputs, newUserInputs, bombMap);
+        return;
+      }
+      if (userInputs[clickY][clickX] >= FLAG) {
+        return;
+      } else {
+        newUserInputs[clickY][clickX] = OPEN;
+        openZero(clickX, clickY, directions, newUserInputs, newBombMap);
+        if (
+          makeGameBoard(newUserInputs, newBombMap)
+            .flat()
+            .includes(BOMB + OPEN) === true
+        ) {
+          openMine(userInputs, newUserInputs, bombMap);
+        }
       }
     }
     setUserInputs(newUserInputs);
@@ -208,11 +230,11 @@ export default function Home() {
     event.preventDefault();
     if (userInputs[clickY][clickX] === OPEN) {
       return;
-    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
+    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 0) {
       newUserInputs[clickY][clickX] += FLAG;
-    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
+    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 1) {
       newUserInputs[clickY][clickX] += QUESTION;
-    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 3) {
+    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 3) {
       newUserInputs[clickY][clickX] += REMOVE;
     }
     setUserInputs(newUserInputs);
@@ -225,10 +247,12 @@ export default function Home() {
           .flat()
           .includes(OPEN + BOMB)
           ? 'game over'
-          : 'playing'}
+          : detectWin(newUserInputs, newBombMap)
+            ? 'you win'
+            : 'playing'}
       </div>
       <div className={styles.userInputs}>
-        {makeGameBoard(userInputs, bombMap).map((row, y) =>
+        {makeGameBoard(newUserInputs, newBombMap).map((row, y) =>
           row.map((column, x) => (
             <button
               className={styles.cell}
