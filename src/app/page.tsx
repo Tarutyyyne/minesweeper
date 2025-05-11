@@ -120,21 +120,24 @@ export default function Home() {
   };
 
   //#TODOここに右クリックの関数を書く
-  // const rightClickCell = (
-  //   clickX: number,
-  //   clickY: number,
-  //   userInputs: number[][],
-  //   newUserInputs: number[][],
-  // ) => {
-  //   if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
-  //     newUserInputs[clickY][clickX] = FLAG;
-  //   } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
-  //     newUserInputs[clickY][clickX] = QUESTION;
-  //   } else if (Math.floor(userInputs[clickY][clickX] / 20) === 4) {
-  //     newUserInputs[clickY][clickX] = REMOVE;
-  //   }
-  //   setUserInputs(newUserInputs);
-  // };
+  const rightClickCell = (
+    clickX: number,
+    clickY: number,
+    userInputs: number[][],
+    newUserInputs: number[][],
+  ) => {
+    event?.preventDefault();
+    if (userInputs[clickY][clickX] === OPEN) {
+      return;
+    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
+      newUserInputs[clickY][clickX] += FLAG;
+    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
+      newUserInputs[clickY][clickX] += QUESTION;
+    } else if (Math.floor(userInputs[clickY][clickX] / 20) === 3) {
+      newUserInputs[clickY][clickX] += REMOVE;
+    }
+    setUserInputs(newUserInputs);
+  };
 
   return (
     <div className={styles.container}>
@@ -153,7 +156,7 @@ export default function Home() {
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
               onClick={() => clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap)}
-              // onContextMenu={rightClickCell(x, y, userInputs, newUserInputs)}
+              onContextMenu={() => rightClickCell(x, y, userInputs, newUserInputs)}
             >
               {column}
             </div>
