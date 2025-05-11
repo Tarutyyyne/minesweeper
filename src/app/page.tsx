@@ -5,10 +5,14 @@ import styles from './page.module.css';
 
 //普通に定数にした。なぜわざわざ関数を作ったのだろうか。
 const EMPTY = 0;
-const BOMB = 1;
+const BOMB = 4;
+const OPEN = 1;
+const FLAG = 2;
+const QUESTION = 2 * 2;
+const REMOVE = 2 * 3;
 
 //x, y座標を一つの数字にする関数
-const makeIndex = (x: number, y: number): number => {
+const makeIndex = (y: number, x: number): number => {
   return y * 9 + x;
 };
 //newBombMapをいじるだけ
@@ -20,7 +24,7 @@ const makeBombMap = (
   clickY: number,
 ) => {
   const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === EMPTY).length;
-  if (countInputs === 90) {
+  if (countInputs === 81) {
     const deleteXY: number = makeIndex(clickX, clickY);
     const randomIndexArray: number[] = Array.from(
       { length: bombMap.flat().length },
@@ -34,19 +38,18 @@ const makeBombMap = (
     }
     const randomIndex: number[] = copyRandomIndexArray.splice(0, 10);
     for (let j = 0; j < 10; j++) {
-      const randomX = randomIndex[j] % 9;
-      const randomY = Math.floor(randomIndex[j] / 9);
+      const randomX = Math.floor(randomIndex[j] / 9);
+      const randomY = randomIndex[j] % 9;
       newBombMap[randomY][randomX] = BOMB;
-      //検証用 clickX,YとrandomX,Yが同じでなければ成功
-      console.log('click:', clickX, clickY);
-      console.log('random:', randomX, randomY);
+      // 検証用 clickX,YとrandomX,Yが同じでなければ成功
+      // console.log('click:', clickX, clickY);
+      // console.log('random:', randomX, randomY);
     }
   }
 };
 
 export default function Home() {
   const [userInputs, setUserInputs] = useState([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -71,6 +74,28 @@ export default function Home() {
   ]);
   const newBombMap: number[][] = structuredClone(bombMap);
 
+  //今からuserInputsとbombMapを一つにまとめたgameBoardを計算値として求まるように書く
+  const makeGameBoard = (userInputs: number[][], bombMap: number[][]): number[][] => {
+    const gameBoard: number[][] = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        gameBoard[i][j] = userInputs[i][j] + bombMap[i][j];
+      }
+    }
+    return gameBoard;
+  };
+  makeGameBoard(userInputs, bombMap);
+
   const clickCell = (
     clickX: number,
     clickY: number,
@@ -79,28 +104,42 @@ export default function Home() {
     bombMap: number[][],
     newBombMap: number[][],
   ) => {
+    //一回だけ
+    // console.log('click');
     makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
-
-    // createBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
     setBombMap(newBombMap);
-    newUserInputs[clickY][clickX] = 1;
+    //以下開く動作
+    console.log('check');
+    newUserInputs[clickY][clickX] = OPEN;
+    console.log(clickX, clickY, makeIndex(clickX, clickY));
     setUserInputs(newUserInputs);
   };
+  console.log('-----------------------------------------');
+  // console.log(userInputs);
+  console.log(bombMap);
+  // console.log(makeGameBoard(userInputs, bombMap));
+
+  //#TODOここに右クリックの関数を書く
 
   return (
     <div className={styles.container}>
+      <div>
+        {makeGameBoard(userInputs, bombMap)
+          .flat()
+          .includes(OPEN + BOMB)
+          ? 'game over'
+          : 'playing'}
+      </div>
       <div className={styles.userInputs}>
-        {bombMap.map((row, clickY) =>
-          row.map((column, clickX) => (
+        {makeGameBoard(userInputs, bombMap).map((row, y) =>
+          row.map((column, x) => (
             <div
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
-              key={`${clickX}-${clickY}`}
-              onClick={() =>
-                clickCell(clickX, clickY, userInputs, newUserInputs, bombMap, newBombMap)
-              }
+              key={`${x}-${y}`}
+              onClick={() => clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap)}
             >
-              {column === BOMB ? BOMB : EMPTY}
+              {column}
             </div>
           )),
         )}
