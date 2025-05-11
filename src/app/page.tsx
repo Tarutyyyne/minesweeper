@@ -139,6 +139,7 @@ export default function Home() {
         if (makeGameBoard(newUserInputs, newBombMap)[openY] !== undefined) {
           //基本ケース
           if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
+            newUserInputs[openY][openX] = OPEN;
             continue;
           } else {
             newUserInputs[openY][openX] = OPEN;
@@ -154,7 +155,6 @@ export default function Home() {
       for (let j = 0; j < 9; j++) {
         if (makeGameBoard(userInputs, bombMap)[i][j] === BOMB) {
           newUserInputs[i][j] += OPEN;
-          console.log('count 10');
         }
       }
     }
@@ -182,10 +182,8 @@ export default function Home() {
       return;
     }
     if (userInputs[clickY][clickX] >= FLAG) {
-      console.log('flag');
       return;
     } else {
-      console.log('open chan');
       newUserInputs[clickY][clickX] = OPEN;
       openZero(clickX, clickY, directions, newUserInputs, newBombMap);
       if (
@@ -193,7 +191,6 @@ export default function Home() {
           .flat()
           .includes(BOMB + OPEN) === true
       ) {
-        console.log('open mine');
         openMine(userInputs, newUserInputs, bombMap);
       }
     }
@@ -206,7 +203,7 @@ export default function Home() {
     clickY: number,
     userInputs: number[][],
     newUserInputs: number[][],
-    event: React.MouseEvent<HTMLDivElement>,
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
     if (userInputs[clickY][clickX] === OPEN) {
@@ -233,7 +230,7 @@ export default function Home() {
       <div className={styles.userInputs}>
         {makeGameBoard(userInputs, bombMap).map((row, y) =>
           row.map((column, x) => (
-            <div
+            <button
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
@@ -243,7 +240,7 @@ export default function Home() {
               onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
             >
               {column}
-            </div>
+            </button>
           )),
         )}
       </div>
