@@ -12,8 +12,8 @@ const isBombThere = (isthere: boolean): number => {
 const makeIndex = (x: number, y: number): number => {
   return y * 9 + x;
 };
-//newBoardをいじるだけ
-const createBombMap = (
+//newBombMapをいじるだけ
+const makeBombMap = (
   userInputs: number[][],
   bombMap: number[][],
   newBombMap: number[][],
@@ -23,29 +23,26 @@ const createBombMap = (
   const countInputs: number = userInputs
     .flat()
     .filter((userInputs) => userInputs === isBombThere(false)).length;
-  //if文の中は一回だけ実行
   if (countInputs === 90) {
-    //clickX,clickYを0とした配列をつくりたいのでこれはその差分
-    const zeroMeasure: number = makeIndex(clickX, clickY);
-    //randomX, randomYのリストを取得するためのプロセス
+    const deleteXY: number = makeIndex(clickX, clickY);
     const randomIndexArray: number[] = Array.from(
-      { length: bombMap.flat().length - 1 },
-      (_, index) => index + 1,
-    ).filter((index) => index !== zeroMeasure); // !==でclickX, clickYを除外
-    console.log(randomIndexArray);
+      { length: bombMap.flat().length },
+      (_, index) => index,
+    ).filter((index) => index !== deleteXY);
     const copyRandomIndexArray: number[] = [];
-    for (let j = 0; j < 80; j++) {
+    for (let i = 0; i < 80; i++) {
       const shuffleIndex = Math.floor(Math.random() * randomIndexArray.length);
       copyRandomIndexArray.push(randomIndexArray[shuffleIndex]);
       randomIndexArray.splice(shuffleIndex, 1);
     }
     const randomIndex: number[] = copyRandomIndexArray.splice(0, 10);
-    // console.log(randomIndex);
-    for (let k = 0; k < 10; k++) {
-      const randomY = randomIndex[k] % 9;
-      const randomX = Math.floor(randomIndex[k] / 9);
-      console.log(randomX, randomY);
+    for (let j = 0; j < 10; j++) {
+      const randomX = randomIndex[j] % 9;
+      const randomY = Math.floor(randomIndex[j] / 9);
       newBombMap[randomY][randomX] = isBombThere(true);
+      //検証用 clickX,YとrandomX,Yが同じでなければ成功
+      console.log('click:', clickX, clickY);
+      console.log('random:', randomX, randomY);
     }
   }
 };
@@ -85,7 +82,9 @@ export default function Home() {
     bombMap: number[][],
     newBombMap: number[][],
   ) => {
-    createBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
+    makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
+
+    // createBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
     setBombMap(newBombMap);
     newUserInputs[clickY][clickX] = 1;
     setUserInputs(newUserInputs);
