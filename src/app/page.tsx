@@ -124,6 +124,7 @@ export default function Home() {
   };
   makeGameBoard(userInputs, bombMap);
 
+  //ゼロ連鎖再帰関数
   const openZero = (
     clickX: number,
     clickY: number,
@@ -132,20 +133,28 @@ export default function Home() {
     newBombMap: number[][],
   ) => {
     if (makeGameBoard(newUserInputs, newBombMap)[clickY][clickX] === OPEN) {
-      console.log('click 0');
       for (let s = 0; s < 8; s++) {
         const openX = clickX + directions[s][1];
         const openY = clickY + directions[s][0];
         if (makeGameBoard(newUserInputs, newBombMap)[openY] !== undefined) {
-          console.log('pass undefined');
+          //基本ケース
           if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
-            console.log('not 0');
             continue;
           } else {
-            console.log('open');
             newUserInputs[openY][openX] = OPEN;
             openZero(openX, openY, directions, newUserInputs, newBombMap);
           }
+        }
+      }
+    }
+  };
+
+  const openMine = (userInputs: number[][], newUserInputs: number[][], bombMap: number[][]) => {
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        if (makeGameBoard(userInputs, bombMap)[i][j] === BOMB) {
+          newUserInputs[i][j] += OPEN;
+          console.log('count 10');
         }
       }
     }
@@ -161,20 +170,32 @@ export default function Home() {
     directions: number[][],
   ) => {
     //一回だけ
-    // console.log('click');
     makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY, directions);
     setBombMap(newBombMap);
     //以下開く動作
+    //旗と？があったら開かない
     if (
-      makeGameBoard(userInputs, bombMap)
+      makeGameBoard(newUserInputs, newBombMap)
         .flat()
-        .includes(BOMB + OPEN) === true ||
-      userInputs[clickY][clickX] >= FLAG
+        .includes(BOMB + OPEN + OPEN) === true
     ) {
       return;
+    }
+    if (userInputs[clickY][clickX] >= FLAG) {
+      console.log('flag');
+      return;
     } else {
+      console.log('open chan');
       newUserInputs[clickY][clickX] = OPEN;
       openZero(clickX, clickY, directions, newUserInputs, newBombMap);
+      if (
+        makeGameBoard(newUserInputs, newBombMap)
+          .flat()
+          .includes(BOMB + OPEN) === true
+      ) {
+        console.log('open mine');
+        openMine(userInputs, newUserInputs, bombMap);
+      }
     }
     setUserInputs(newUserInputs);
   };
@@ -188,19 +209,14 @@ export default function Home() {
     event: React.MouseEvent<HTMLDivElement>,
   ) => {
     event.preventDefault();
-    console.log('right');
     if (userInputs[clickY][clickX] === OPEN) {
-      console.log('return');
       return;
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
       newUserInputs[clickY][clickX] += FLAG;
-      console.log('flag');
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
       newUserInputs[clickY][clickX] += QUESTION;
-      console.log('question');
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 3) {
       newUserInputs[clickY][clickX] += REMOVE;
-      console.log('remove');
     }
     setUserInputs(newUserInputs);
   };
