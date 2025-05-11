@@ -5,11 +5,11 @@ import styles from './page.module.css';
 
 //普通に定数にした。なぜわざわざ関数を作ったのだろうか。
 const EMPTY = 0;
-const BOMB = 4;
-const OPEN = 1;
-const FLAG = 2;
-const QUESTION = 2 * 2;
-const REMOVE = 2 * 3;
+const BOMB = 9;
+const OPEN = 10;
+const FLAG = 20;
+const QUESTION = FLAG * 2;
+const REMOVE = -(FLAG + QUESTION);
 
 //x, y座標を一つの数字にする関数
 const makeIndex = (y: number, x: number): number => {
@@ -41,9 +41,6 @@ const makeBombMap = (
       const randomX = Math.floor(randomIndex[j] / 9);
       const randomY = randomIndex[j] % 9;
       newBombMap[randomY][randomX] = BOMB;
-      // 検証用 clickX,YとrandomX,Yが同じでなければ成功
-      // console.log('click:', clickX, clickY);
-      // console.log('random:', randomX, randomY);
     }
   }
 };
@@ -89,7 +86,7 @@ export default function Home() {
     ];
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        gameBoard[i][j] = userInputs[i][j] + bombMap[i][j];
+        gameBoard[i][j] = bombMap[i][j] + userInputs[i][j];
       }
     }
     return gameBoard;
@@ -110,16 +107,34 @@ export default function Home() {
     setBombMap(newBombMap);
     //以下開く動作
     console.log('check');
-    newUserInputs[clickY][clickX] = OPEN;
-    console.log(clickX, clickY, makeIndex(clickX, clickY));
+    if (
+      makeGameBoard(userInputs, bombMap)
+        .flat()
+        .includes(BOMB + OPEN) === true
+    ) {
+      return;
+    } else {
+      newUserInputs[clickY][clickX] = OPEN;
+    }
     setUserInputs(newUserInputs);
   };
-  console.log('-----------------------------------------');
-  // console.log(userInputs);
-  console.log(bombMap);
-  // console.log(makeGameBoard(userInputs, bombMap));
 
   //#TODOここに右クリックの関数を書く
+  // const rightClickCell = (
+  //   clickX: number,
+  //   clickY: number,
+  //   userInputs: number[][],
+  //   newUserInputs: number[][],
+  // ) => {
+  //   if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
+  //     newUserInputs[clickY][clickX] = FLAG;
+  //   } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
+  //     newUserInputs[clickY][clickX] = QUESTION;
+  //   } else if (Math.floor(userInputs[clickY][clickX] / 20) === 4) {
+  //     newUserInputs[clickY][clickX] = REMOVE;
+  //   }
+  //   setUserInputs(newUserInputs);
+  // };
 
   return (
     <div className={styles.container}>
@@ -138,6 +153,7 @@ export default function Home() {
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
               onClick={() => clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap)}
+              // onContextMenu={rightClickCell(x, y, userInputs, newUserInputs)}
             >
               {column}
             </div>
