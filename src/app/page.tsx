@@ -55,8 +55,8 @@ const makeBombMap = (
       newBombMap[randomY][randomX] = BOMB;
       //爆弾の8マスに予測の値をnewBombMapに代入していく
       for (let k = 0; k < 8; k++) {
-        const predictX = randomX + directions[k][0];
-        const predictY = randomY + directions[k][1];
+        const predictX = randomX + directions[k][1];
+        const predictY = randomY + directions[k][0];
         if (bombMap[predictY] !== undefined) {
           if (bombMap[predictY][predictX] === BOMB && newBombMap[predictY][predictX] === BOMB) {
             continue;
@@ -64,7 +64,6 @@ const makeBombMap = (
             bombMap[predictY][predictX] !== BOMB &&
             newBombMap[predictY][predictX] !== BOMB
           ) {
-            console.log();
             newBombMap[predictY][predictX] += SAFE[1];
           } else {
             continue;
@@ -125,6 +124,33 @@ export default function Home() {
   };
   makeGameBoard(userInputs, bombMap);
 
+  const openZero = (
+    clickX: number,
+    clickY: number,
+    directions: number[][],
+    newUserInputs: number[][],
+    newBombMap: number[][],
+  ) => {
+    if (makeGameBoard(newUserInputs, newBombMap)[clickY][clickX] === OPEN) {
+      console.log('click 0');
+      for (let s = 0; s < 8; s++) {
+        const openX = clickX + directions[s][1];
+        const openY = clickY + directions[s][0];
+        if (makeGameBoard(newUserInputs, newBombMap)[openY] !== undefined) {
+          console.log('pass undefined');
+          if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
+            console.log('not 0');
+            continue;
+          } else {
+            console.log('open');
+            newUserInputs[openY][openX] = OPEN;
+            openZero(openX, openY, directions, newUserInputs, newBombMap);
+          }
+        }
+      }
+    }
+  };
+
   const clickCell = (
     clickX: number,
     clickY: number,
@@ -132,13 +158,13 @@ export default function Home() {
     newUserInputs: number[][],
     bombMap: number[][],
     newBombMap: number[][],
+    directions: number[][],
   ) => {
     //一回だけ
     // console.log('click');
     makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY, directions);
     setBombMap(newBombMap);
     //以下開く動作
-    console.log('check');
     if (
       makeGameBoard(userInputs, bombMap)
         .flat()
@@ -148,6 +174,7 @@ export default function Home() {
       return;
     } else {
       newUserInputs[clickY][clickX] = OPEN;
+      openZero(clickX, clickY, directions, newUserInputs, newBombMap);
     }
     setUserInputs(newUserInputs);
   };
@@ -161,14 +188,19 @@ export default function Home() {
     event: React.MouseEvent<HTMLDivElement>,
   ) => {
     event.preventDefault();
+    console.log('right');
     if (userInputs[clickY][clickX] === OPEN) {
+      console.log('return');
       return;
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
       newUserInputs[clickY][clickX] += FLAG;
+      console.log('flag');
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 1) {
       newUserInputs[clickY][clickX] += QUESTION;
+      console.log('question');
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 3) {
       newUserInputs[clickY][clickX] += REMOVE;
+      console.log('remove');
     }
     setUserInputs(newUserInputs);
   };
@@ -189,7 +221,9 @@ export default function Home() {
               className={styles.cell}
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
-              onClick={() => clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap)}
+              onClick={() =>
+                clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap, directions)
+              }
               onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
             >
               {column}
