@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-//爆弾があるかどうかをtrue,falseを引数に与えて数値に変換する関数
-const isBombThere = (isthere: boolean): number => {
-  return isthere === true ? 1 : 0;
-};
+//普通に定数にした。なぜわざわざ関数を作ったのだろうか。
+const EMPTY = 0;
+const BOMB = 1;
 
 //x, y座標を一つの数字にする関数
 const makeIndex = (x: number, y: number): number => {
@@ -20,9 +19,7 @@ const makeBombMap = (
   clickX: number,
   clickY: number,
 ) => {
-  const countInputs: number = userInputs
-    .flat()
-    .filter((userInputs) => userInputs === isBombThere(false)).length;
+  const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === EMPTY).length;
   if (countInputs === 90) {
     const deleteXY: number = makeIndex(clickX, clickY);
     const randomIndexArray: number[] = Array.from(
@@ -39,7 +36,7 @@ const makeBombMap = (
     for (let j = 0; j < 10; j++) {
       const randomX = randomIndex[j] % 9;
       const randomY = Math.floor(randomIndex[j] / 9);
-      newBombMap[randomY][randomX] = isBombThere(true);
+      newBombMap[randomY][randomX] = BOMB;
       //検証用 clickX,YとrandomX,Yが同じでなければ成功
       console.log('click:', clickX, clickY);
       console.log('random:', randomX, randomY);
@@ -103,7 +100,7 @@ export default function Home() {
                 clickCell(clickX, clickY, userInputs, newUserInputs, bombMap, newBombMap)
               }
             >
-              {column === isBombThere(true) ? isBombThere(true) : isBombThere(false)}
+              {column === BOMB ? BOMB : EMPTY}
             </div>
           )),
         )}
