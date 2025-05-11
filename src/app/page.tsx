@@ -11,6 +11,17 @@ const FLAG = 20;
 const QUESTION = FLAG * 2;
 const REMOVE = -(FLAG + QUESTION);
 
+const directions: number[][] = [
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+  [1, 0],
+  [1, -1],
+  [0, -1],
+  [-1, -1],
+];
+
 //x, y座標を一つの数字にする関数
 const makeIndex = (y: number, x: number): number => {
   return y * 9 + x;
@@ -22,6 +33,7 @@ const makeBombMap = (
   newBombMap: number[][],
   clickX: number,
   clickY: number,
+  directions: number[][],
 ) => {
   const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === OPEN).length;
   if (countInputs === 0) {
@@ -41,6 +53,26 @@ const makeBombMap = (
       const randomX = Math.floor(randomIndex[j] / 9);
       const randomY = randomIndex[j] % 9;
       newBombMap[randomY][randomX] = BOMB;
+      //爆弾の8マスに予測の値をnewBombMapに代入していく
+      for (let k = 0; k < 8; k++) {
+        const predictX = randomX + directions[k][0];
+        const predictY = randomY + directions[k][1];
+        if (bombMap[predictY] !== undefined) {
+          if (bombMap[predictY][predictX] === BOMB && newBombMap[predictY][predictX] === BOMB) {
+            continue;
+          } else if (
+            bombMap[predictY][predictX] !== BOMB &&
+            newBombMap[predictY][predictX] !== BOMB
+          ) {
+            console.log();
+            newBombMap[predictY][predictX] += SAFE[1];
+          } else {
+            continue;
+          }
+        } else {
+          continue;
+        }
+      }
     }
   }
 };
@@ -103,7 +135,7 @@ export default function Home() {
   ) => {
     //一回だけ
     // console.log('click');
-    makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY);
+    makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY, directions);
     setBombMap(newBombMap);
     //以下開く動作
     console.log('check');
