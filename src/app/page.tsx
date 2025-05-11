@@ -4,7 +4,7 @@ import { useState } from 'react';
 import styles from './page.module.css';
 
 //普通に定数にした。なぜわざわざ関数を作ったのだろうか。
-const EMPTY = 0;
+const SAFE: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const BOMB = 9;
 const OPEN = 10;
 const FLAG = 20;
@@ -23,8 +23,8 @@ const makeBombMap = (
   clickX: number,
   clickY: number,
 ) => {
-  const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === EMPTY).length;
-  if (countInputs === 81) {
+  const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === OPEN).length;
+  if (countInputs === 0) {
     const deleteXY: number = makeIndex(clickX, clickY);
     const randomIndexArray: number[] = Array.from(
       { length: bombMap.flat().length },
@@ -110,7 +110,8 @@ export default function Home() {
     if (
       makeGameBoard(userInputs, bombMap)
         .flat()
-        .includes(BOMB + OPEN) === true
+        .includes(BOMB + OPEN) === true ||
+      userInputs[clickY][clickX] >= FLAG
     ) {
       return;
     } else {
@@ -126,7 +127,7 @@ export default function Home() {
     userInputs: number[][],
     newUserInputs: number[][],
   ) => {
-    event?.preventDefault();
+    event.preventDefault();
     if (userInputs[clickY][clickX] === OPEN) {
       return;
     } else if (Math.floor(userInputs[clickY][clickX] / 20) === 0) {
