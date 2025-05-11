@@ -158,6 +158,7 @@ export default function Home() {
     clickY: number,
     userInputs: number[][],
     newUserInputs: number[][],
+    event: React.MouseEvent<HTMLDivElement>,
   ) => {
     event.preventDefault();
     if (userInputs[clickY][clickX] === OPEN) {
@@ -189,7 +190,7 @@ export default function Home() {
               style={{ backgroundPosition: '-420px' }}
               key={`${x}-${y}`}
               onClick={() => clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap)}
-              onContextMenu={() => rightClickCell(x, y, userInputs, newUserInputs)}
+              onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
             >
               {column}
             </div>
