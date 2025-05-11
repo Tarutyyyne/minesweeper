@@ -127,17 +127,15 @@ export default function Home() {
 
   //無事に全てめくれた時のための処理に使う定数
   const detectWin = (newUserInputs: number[][], newBombMap: number[][]): boolean => {
-    const countClose: number = makeGameBoard(newUserInputs, newBombMap)
-      .flat()
-      .filter((bomb) => bomb % FLAG === BOMB).length; //%30===9
     const countQuestion: number = makeGameBoard(newUserInputs, newBombMap)
       .flat()
-      .filter((bomb) => (bomb % FLAG) + QUESTION === 0).length;
-    const answer: number = countClose - countQuestion;
+      .filter((bomb) => bomb >= FLAG + QUESTION).length;
     const countOpen = makeGameBoard(newUserInputs, newBombMap)
       .flat()
       .filter((bomb) => OPEN <= bomb && bomb < FLAG).length;
-    if (answer + countOpen === 81) {
+    const answer = countOpen - countQuestion + HOW_MANY_BOMB;
+    console.log(countQuestion);
+    if (answer === 81) {
       return true;
     } else {
       return false;
@@ -228,14 +226,16 @@ export default function Home() {
     event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
-    if (userInputs[clickY][clickX] === OPEN) {
-      return;
-    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 0) {
-      newUserInputs[clickY][clickX] += FLAG;
-    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 1) {
-      newUserInputs[clickY][clickX] += QUESTION;
-    } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 3) {
-      newUserInputs[clickY][clickX] += REMOVE;
+    if (detectWin(newUserInputs, newBombMap) === false) {
+      if (userInputs[clickY][clickX] === OPEN) {
+        return;
+      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 0) {
+        newUserInputs[clickY][clickX] += FLAG;
+      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 1) {
+        newUserInputs[clickY][clickX] += QUESTION;
+      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 3) {
+        newUserInputs[clickY][clickX] += REMOVE;
+      }
     }
     setUserInputs(newUserInputs);
   };
