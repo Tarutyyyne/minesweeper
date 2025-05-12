@@ -49,8 +49,8 @@ const makeBombMap = (
       copyRandomIndexArray.push(randomIndexArray[shuffleIndex]);
       randomIndexArray.splice(shuffleIndex, 1);
     }
-    const randomIndex: number[] = copyRandomIndexArray.splice(0, 10);
-    for (let j = 0; j < 10; j++) {
+    const randomIndex: number[] = copyRandomIndexArray.splice(0, HOW_MANY_BOMB);
+    for (let j = 0; j < HOW_MANY_BOMB; j++) {
       const randomX = Math.floor(randomIndex[j] / 9);
       const randomY = randomIndex[j] % 9;
       newBombMap[randomY][randomX] = BOMB;
@@ -134,7 +134,6 @@ export default function Home() {
       .flat()
       .filter((bomb) => OPEN <= bomb && bomb < FLAG).length;
     const answer = countOpen - countQuestion + HOW_MANY_BOMB;
-    console.log(countQuestion);
     if (answer === 81) {
       return true;
     } else {
@@ -179,6 +178,17 @@ export default function Home() {
     }
   };
 
+  const controlSplit = (column: number): string => {
+    const ones_digit: number = column % 10;
+    if (ones_digit === SAFE[0]) {
+      return '-420px';
+    } else if (SAFE[1] <= ones_digit && ones_digit <= SAFE[8]) {
+      return `${30 - 30 * ones_digit}px`;
+    } else {
+      return '-300px';
+    }
+  };
+
   const clickCell = (
     clickX: number,
     clickY: number,
@@ -215,6 +225,7 @@ export default function Home() {
         }
       }
     }
+
     setUserInputs(newUserInputs);
   };
 
@@ -257,15 +268,13 @@ export default function Home() {
           row.map((column, x) => (
             <button
               className={styles.cell}
-              style={{ backgroundPosition: '-420px' }}
+              style={{ backgroundPosition: controlSplit(column) }}
               key={`${x}-${y}`}
               onClick={() =>
                 clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap, directions)
               }
               onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
-            >
-              {column}
-            </button>
+            />
           )),
         )}
       </div>
