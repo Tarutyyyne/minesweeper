@@ -159,6 +159,7 @@ export default function Home() {
           if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
             newUserInputs[openY][openX] = OPEN;
             continue;
+            //再帰
           } else {
             newUserInputs[openY][openX] = OPEN;
             openZero(openX, openY, directions, newUserInputs, newBombMap);
