@@ -37,7 +37,7 @@ const makeBombMap = (
   directions: number[][],
 ) => {
   const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === OPEN).length;
-  if (countInputs === 0) {
+  if (userInputs[clickY][clickX] < OPEN && countInputs === 0) {
     const deleteXY: number = makeIndex(clickX, clickY);
     const randomIndexArray: number[] = Array.from(
       { length: bombMap.flat().length },
@@ -134,11 +134,8 @@ export default function Home() {
       .flat()
       .filter((bomb) => OPEN <= bomb && bomb < FLAG).length;
     const answer = countOpen - countQuestion + HOW_MANY_BOMB;
-    if (answer === 81) {
-      return true;
-    } else {
-      return false;
-    }
+    // answer === 81 自体がbooleanを返す
+    return answer === 81;
   };
 
   //ゼロ連鎖再帰関数
@@ -168,6 +165,7 @@ export default function Home() {
     }
   };
 
+  //地雷を踏んだ時に他の地雷も開ける処理
   const openMine = (userInputs: number[][], newUserInputs: number[][], bombMap: number[][]) => {
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
@@ -203,15 +201,17 @@ export default function Home() {
     setBombMap(newBombMap);
     //以下開く動作
     //旗と？があったら開かない
-    if (detectWin(newUserInputs, newBombMap) === false) {
+    if (detectWin(userInputs, bombMap) === false) {
+      if (userInputs[clickY][clickX] >= FLAG) {
+        console.log('flag');
+        return;
+      }
       if (
         makeGameBoard(newUserInputs, newBombMap)
           .flat()
           .includes(BOMB + OPEN + OPEN) === true
       ) {
-        return;
-      }
-      if (userInputs[clickY][clickX] >= FLAG) {
+        console.log('skip');
         return;
       } else {
         newUserInputs[clickY][clickX] = OPEN;
@@ -268,13 +268,26 @@ export default function Home() {
           row.map((column, x) => (
             <button
               className={styles.cell}
-              style={{ backgroundPosition: controlSplit(column) }}
+              style={{
+                backgroundPosition: controlSplit(column),
+                backgroundColor: column === BOMB + OPEN + OPEN ? 'red' : 'lightgray',
+              }}
               key={`${x}-${y}`}
               onClick={() =>
                 clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap, directions)
               }
               onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
-            />
+            >
+              <div
+                className={styles.rightClick}
+                style={{
+                  backgroundPosition:
+                    column >= FLAG + QUESTION ? '-240px' : column >= FLAG ? '-270px' : '-420px',
+                }}
+              >
+                {column}
+              </div>
+            </button>
           )),
         )}
       </div>
