@@ -5,6 +5,8 @@ import styles from './page.module.css';
 
 //普通に定数にした。なぜわざわざ関数を作ったのだろうか。
 const HOW_MANY_BOMB = 10;
+const WIDTH = 9;
+const HEIGHT = 9;
 const SAFE: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const BOMB = 9;
 const OPEN = 10;
@@ -22,6 +24,20 @@ const directions: number[][] = [
   [0, -1],
   [-1, -1],
 ];
+
+const boardArrays: number[][] = [];
+const rowArray: number[] = [];
+const makeBoardArray = (boardArrays: number[][], rowArray: number[]): number[][] => {
+  const copyRowArray: number[] = [...rowArray];
+  for (let i = 0; i < WIDTH; i++) {
+    copyRowArray.push(0);
+  }
+  const copyBoardArray: number[][] = [...boardArrays];
+  for (let j = 0; j < HEIGHT; j++) {
+    copyBoardArray.push(copyRowArray);
+  }
+  return copyBoardArray;
+};
 
 //x, y座標を一つの数字にする関数
 const makeIndex = (y: number, x: number): number => {
@@ -79,6 +95,8 @@ const makeBombMap = (
 };
 
 export default function Home() {
+  //今ここが問題
+  console.log(makeBoardArray(boardArrays, rowArray));
   const [userInputs, setUserInputs] = useState([
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -208,7 +226,6 @@ export default function Home() {
       return;
     }
     if (userInputs[clickY][clickX] >= FLAG) {
-      console.log('flag');
       return;
     }
     if (
@@ -216,7 +233,6 @@ export default function Home() {
         .flat()
         .includes(BOMB + OPEN + OPEN)
     ) {
-      console.log('skip');
       return;
     } else {
       newUserInputs[clickY][clickX] = OPEN;
@@ -298,7 +314,7 @@ export default function Home() {
                         column >= FLAG + QUESTION ? '-240px' : column >= FLAG ? '-270px' : '-420px',
                     }}
                   >
-                    {column}
+                    {/* {column} */}
                   </div>
                 </div>
               ) : (
