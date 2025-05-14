@@ -10,7 +10,7 @@ const BOMB = 9;
 const OPEN = 10;
 const FLAG = 30;
 const QUESTION = FLAG * 2;
-const REMOVE = -(FLAG + QUESTION);
+const REMOVE = FLAG + QUESTION;
 
 const directions: number[][] = [
   [-1, 0],
@@ -58,17 +58,18 @@ const makeBombMap = (
       for (let k = 0; k < 8; k++) {
         const predictX = randomX + directions[k][1];
         const predictY = randomY + directions[k][0];
-        if (bombMap[predictY] !== undefined) {
-          if (bombMap[predictY][predictX] === BOMB && newBombMap[predictY][predictX] === BOMB) {
-            continue;
-          } else if (
-            bombMap[predictY][predictX] !== BOMB &&
-            newBombMap[predictY][predictX] !== BOMB
-          ) {
-            newBombMap[predictY][predictX] += SAFE[1];
-          } else {
-            continue;
-          }
+        //undefinedが返されたらこのif文でcontinueさせる
+        if (bombMap[predictY] === undefined) {
+          continue;
+        }
+        //上のおかげで「もしundefinedじゃないなら」というifのネストを減らせる
+        if (bombMap[predictY][predictX] === BOMB && newBombMap[predictY][predictX] === BOMB) {
+          continue;
+        } else if (
+          bombMap[predictY][predictX] !== BOMB &&
+          newBombMap[predictY][predictX] !== BOMB
+        ) {
+          newBombMap[predictY][predictX] += SAFE[1];
         } else {
           continue;
         }
@@ -146,21 +147,23 @@ export default function Home() {
     newUserInputs: number[][],
     newBombMap: number[][],
   ) => {
-    if (makeGameBoard(newUserInputs, newBombMap)[clickY][clickX] === OPEN) {
-      for (let s = 0; s < 8; s++) {
-        const openX = clickX + directions[s][1];
-        const openY = clickY + directions[s][0];
-        if (makeGameBoard(newUserInputs, newBombMap)[openY] !== undefined) {
-          //基本ケース
-          if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
-            newUserInputs[openY][openX] = OPEN;
-            continue;
-            //再帰
-          } else {
-            newUserInputs[openY][openX] = OPEN;
-            openZero(openX, openY, directions, newUserInputs, newBombMap);
-          }
-        }
+    if (makeGameBoard(newUserInputs, newBombMap)[clickY][clickX] !== OPEN) {
+      return;
+    }
+    for (let s = 0; s < 8; s++) {
+      const openX = clickX + directions[s][1];
+      const openY = clickY + directions[s][0];
+      if (makeGameBoard(newUserInputs, newBombMap)[openY] === undefined) {
+        continue;
+      }
+      //基本ケース
+      if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
+        newUserInputs[openY][openX] = OPEN;
+        continue;
+        //再帰
+      } else {
+        newUserInputs[openY][openX] = OPEN;
+        openZero(openX, openY, directions, newUserInputs, newBombMap);
       }
     }
   };
@@ -201,35 +204,35 @@ export default function Home() {
     setBombMap(newBombMap);
     //以下開く動作
     //旗と？があったら開かない
-    if (detectWin(userInputs, bombMap) === false) {
-      if (userInputs[clickY][clickX] >= FLAG) {
-        console.log('flag');
-        return;
-      }
+    if (detectWin(userInputs, bombMap)) {
+      return;
+    }
+    if (userInputs[clickY][clickX] >= FLAG) {
+      console.log('flag');
+      return;
+    }
+    if (
+      makeGameBoard(newUserInputs, newBombMap)
+        .flat()
+        .includes(BOMB + OPEN + OPEN)
+    ) {
+      console.log('skip');
+      return;
+    } else {
+      newUserInputs[clickY][clickX] = OPEN;
+      openZero(clickX, clickY, directions, newUserInputs, newBombMap);
       if (
         makeGameBoard(newUserInputs, newBombMap)
           .flat()
-          .includes(BOMB + OPEN + OPEN) === true
+          .includes(BOMB + OPEN)
       ) {
-        console.log('skip');
-        return;
-      } else {
-        newUserInputs[clickY][clickX] = OPEN;
-        openZero(clickX, clickY, directions, newUserInputs, newBombMap);
-        if (
-          makeGameBoard(newUserInputs, newBombMap)
-            .flat()
-            .includes(BOMB + OPEN) === true
-        ) {
-          openMine(userInputs, newUserInputs, bombMap);
-        }
+        openMine(userInputs, newUserInputs, bombMap);
       }
     }
-
     setUserInputs(newUserInputs);
   };
 
-  //#TODOここに右クリックの関数を書く
+  //ここに右クリックの関数を書く
   const rightClickCell = (
     clickX: number,
     clickY: number,
@@ -238,7 +241,7 @@ export default function Home() {
     event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
-    if (detectWin(newUserInputs, newBombMap) === false) {
+    if (!detectWin(newUserInputs, newBombMap)) {
       if (userInputs[clickY][clickX] === OPEN) {
         return;
       } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 0) {
@@ -246,7 +249,7 @@ export default function Home() {
       } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 1) {
         newUserInputs[clickY][clickX] += QUESTION;
       } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 3) {
-        newUserInputs[clickY][clickX] += REMOVE;
+        newUserInputs[clickY][clickX] -= REMOVE;
       }
     }
     setUserInputs(newUserInputs);
@@ -276,17 +279,32 @@ export default function Home() {
               onClick={() =>
                 clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap, directions)
               }
-              onContextMenu={(e) => rightClickCell(x, y, userInputs, newUserInputs, e)}
+              onContextMenu={(eventObject) =>
+                rightClickCell(x, y, userInputs, newUserInputs, eventObject)
+              }
             >
-              <div
-                className={styles.rightClick}
-                style={{
-                  backgroundPosition:
-                    column >= FLAG + QUESTION ? '-240px' : column >= FLAG ? '-270px' : '-420px',
-                }}
-              >
-                {column}
-              </div>
+              {column < OPEN || FLAG <= column ? (
+                <div
+                  className={styles.cellCover}
+                  style={{
+                    backgroundPosition: '-420px',
+                  }}
+                >
+                  <div
+                    className={styles.rightClick}
+                    style={{
+                      backgroundColor: 'gray',
+                      backgroundPosition:
+                        column >= FLAG + QUESTION ? '-240px' : column >= FLAG ? '-270px' : '-420px',
+                    }}
+                  >
+                    {column}
+                  </div>
+                </div>
+              ) : (
+                // OPEN < column < FLAGのとき
+                <div />
+              )}
             </button>
           )),
         )}

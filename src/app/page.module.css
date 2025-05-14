@@ -28,17 +28,19 @@
   color: orangered;
   background: url('~/src/assets/images/icons.png') no-repeat;
   background-color: lightgray;
-  border: 1px solid gray;
+  border: 1px solid black;
 }
 
 .cellCover {
-  width: 30px;
-  height: 30px;
-  background-color: gray;
+  width: 29px;
+  height: 29px;
+  background: url('~/src/assets/images/icons.png') no-repeat;
+  background-color: black;
 }
 
 .rightClick {
-  width: 30px;
-  height: 30px;
+  width: 29px;
+  height: 29px;
   background: url('~/src/assets/images/icons.png') no-repeat;
+  background-color: gray;
 }
