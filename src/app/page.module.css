@@ -31,7 +31,7 @@
   border: 1px solid black;
 }
 
-.cellCover {
+/* .cellCover {
   width: 29px;
   height: 29px;
   background: url('~/src/assets/images/icons.png') no-repeat;
@@ -43,4 +43,4 @@
   height: 29px;
   background: url('~/src/assets/images/icons.png') no-repeat;
   background-color: gray;
-}
+} */

@@ -3,27 +3,8 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-//普通に定数にした。なぜわざわざ関数を作ったのだろうか。
-const HOW_MANY_BOMB = 10;
-const WIDTH = 9;
+const WIDTH = 7;
 const HEIGHT = 9;
-const SAFE: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const BOMB = 9;
-const OPEN = 10;
-const FLAG = 30;
-const QUESTION = FLAG * 2;
-const REMOVE = FLAG + QUESTION;
-
-const directions: number[][] = [
-  [-1, 0],
-  [-1, 1],
-  [0, 1],
-  [1, 1],
-  [1, 0],
-  [1, -1],
-  [0, -1],
-  [-1, -1],
-];
 
 const boardArrays: number[][] = [];
 const rowArray: number[] = [];
@@ -38,264 +19,24 @@ const makeBoardArray = (boardArrays: number[][], rowArray: number[]): number[][]
   }
   return copyBoardArray;
 };
-
-//x, y座標を一つの数字にする関数
-const makeIndex = (y: number, x: number): number => {
-  return y * 9 + x;
-};
-//newBombMapをいじるだけ
-const makeBombMap = (
-  userInputs: number[][],
-  bombMap: number[][],
-  newBombMap: number[][],
-  clickX: number,
-  clickY: number,
-  directions: number[][],
-) => {
-  const countInputs: number = userInputs.flat().filter((userInputs) => userInputs === OPEN).length;
-  if (userInputs[clickY][clickX] < OPEN && countInputs === 0) {
-    const deleteXY: number = makeIndex(clickX, clickY);
-    const randomIndexArray: number[] = Array.from(
-      { length: bombMap.flat().length },
-      (_, index) => index,
-    ).filter((index) => index !== deleteXY);
-    const copyRandomIndexArray: number[] = [];
-    for (let i = 0; i < 80; i++) {
-      const shuffleIndex = Math.floor(Math.random() * randomIndexArray.length);
-      copyRandomIndexArray.push(randomIndexArray[shuffleIndex]);
-      randomIndexArray.splice(shuffleIndex, 1);
-    }
-    const randomIndex: number[] = copyRandomIndexArray.splice(0, HOW_MANY_BOMB);
-    for (let j = 0; j < HOW_MANY_BOMB; j++) {
-      const randomX = Math.floor(randomIndex[j] / 9);
-      const randomY = randomIndex[j] % 9;
-      newBombMap[randomY][randomX] = BOMB;
-      //爆弾の8マスに予測の値をnewBombMapに代入していく
-      for (let k = 0; k < 8; k++) {
-        const predictX = randomX + directions[k][1];
-        const predictY = randomY + directions[k][0];
-        //undefinedが返されたらこのif文でcontinueさせる
-        if (bombMap[predictY] === undefined) {
-          continue;
-        }
-        //上のおかげで「もしundefinedじゃないなら」というifのネストを減らせる
-        if (bombMap[predictY][predictX] === BOMB && newBombMap[predictY][predictX] === BOMB) {
-          continue;
-        } else if (
-          bombMap[predictY][predictX] !== BOMB &&
-          newBombMap[predictY][predictX] !== BOMB
-        ) {
-          newBombMap[predictY][predictX] += SAFE[1];
-        } else {
-          continue;
-        }
-      }
-    }
-  }
-};
-
 export default function Home() {
-  //今ここが問題
   const [userInputs, setUserInputs] = useState(makeBoardArray(boardArrays, rowArray));
-  const newUserInputs = structuredClone(userInputs);
+  const newUserInputs: number[][] = structuredClone(userInputs);
   const [bombMap, setBombMap] = useState(makeBoardArray(boardArrays, rowArray));
   const newBombMap: number[][] = structuredClone(bombMap);
-
-  //今からuserInputsとbombMapを一つにまとめたgameBoardを計算値として求まるように書く
-  const makeGameBoard = (userInputs: number[][], bombMap: number[][]): number[][] => {
-    const gameBoard: number[][] = makeBoardArray(boardArrays, rowArray);
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        gameBoard[i][j] = bombMap[i][j] + userInputs[i][j];
-      }
-    }
-    return gameBoard;
-  };
-  makeGameBoard(userInputs, bombMap);
-
-  //無事に全てめくれた時のための処理に使う定数
-  const detectWin = (newUserInputs: number[][], newBombMap: number[][]): boolean => {
-    const countQuestion: number = makeGameBoard(newUserInputs, newBombMap)
-      .flat()
-      .filter((bomb) => bomb >= FLAG + QUESTION).length;
-    const countOpen = makeGameBoard(newUserInputs, newBombMap)
-      .flat()
-      .filter((bomb) => OPEN <= bomb && bomb < FLAG).length;
-    const answer = countOpen - countQuestion + HOW_MANY_BOMB;
-    // answer === 81 自体がbooleanを返す
-    return answer === 81;
-  };
-
-  //ゼロ連鎖再帰関数
-  const openZero = (
-    clickX: number,
-    clickY: number,
-    directions: number[][],
-    newUserInputs: number[][],
-    newBombMap: number[][],
-  ) => {
-    if (makeGameBoard(newUserInputs, newBombMap)[clickY][clickX] !== OPEN) {
-      return;
-    }
-    for (let s = 0; s < 8; s++) {
-      const openX = clickX + directions[s][1];
-      const openY = clickY + directions[s][0];
-      if (makeGameBoard(newUserInputs, newBombMap)[openY] === undefined) {
-        continue;
-      }
-      //基本ケース
-      if (makeGameBoard(newUserInputs, newBombMap)[openY][openX] !== SAFE[0]) {
-        newUserInputs[openY][openX] = OPEN;
-        continue;
-        //再帰
-      } else {
-        newUserInputs[openY][openX] = OPEN;
-        openZero(openX, openY, directions, newUserInputs, newBombMap);
-      }
-    }
-  };
-
-  //地雷を踏んだ時に他の地雷も開ける処理
-  const openMine = (userInputs: number[][], newUserInputs: number[][], bombMap: number[][]) => {
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        if (makeGameBoard(userInputs, bombMap)[i][j] === BOMB) {
-          newUserInputs[i][j] += OPEN;
-        }
-      }
-    }
-  };
-
-  const controlSplit = (column: number): string => {
-    const ones_digit: number = column % 10;
-    if (ones_digit === SAFE[0]) {
-      return '-420px';
-    } else if (SAFE[1] <= ones_digit && ones_digit <= SAFE[8]) {
-      return `${30 - 30 * ones_digit}px`;
-    } else {
-      return '-300px';
-    }
-  };
-
-  const clickCell = (
-    clickX: number,
-    clickY: number,
-    userInputs: number[][],
-    newUserInputs: number[][],
-    bombMap: number[][],
-    newBombMap: number[][],
-    directions: number[][],
-  ) => {
-    //一回だけ
-    makeBombMap(userInputs, bombMap, newBombMap, clickX, clickY, directions);
-    setBombMap(newBombMap);
-    //以下開く動作
-    //旗と？があったら開かない
-    if (detectWin(userInputs, bombMap)) {
-      return;
-    }
-    if (userInputs[clickY][clickX] >= FLAG) {
-      return;
-    }
-    if (
-      makeGameBoard(newUserInputs, newBombMap)
-        .flat()
-        .includes(BOMB + OPEN + OPEN)
-    ) {
-      return;
-    } else {
-      newUserInputs[clickY][clickX] = OPEN;
-      openZero(clickX, clickY, directions, newUserInputs, newBombMap);
-      if (
-        makeGameBoard(newUserInputs, newBombMap)
-          .flat()
-          .includes(BOMB + OPEN)
-      ) {
-        openMine(userInputs, newUserInputs, bombMap);
-      }
-    }
-    setUserInputs(newUserInputs);
-  };
-
-  //ここに右クリックの関数を書く
-  const rightClickCell = (
-    clickX: number,
-    clickY: number,
-    userInputs: number[][],
-    newUserInputs: number[][],
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    event.preventDefault();
-    if (!detectWin(newUserInputs, newBombMap)) {
-      if (userInputs[clickY][clickX] === OPEN) {
-        return;
-      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 0) {
-        newUserInputs[clickY][clickX] += FLAG;
-      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 1) {
-        newUserInputs[clickY][clickX] += QUESTION;
-      } else if (Math.floor(userInputs[clickY][clickX] / FLAG) === 3) {
-        newUserInputs[clickY][clickX] -= REMOVE;
-      }
-    }
-    setUserInputs(newUserInputs);
-  };
+  console.log(userInputs);
 
   return (
     <div className={styles.container}>
-      <div>
-        {makeGameBoard(userInputs, bombMap)
-          .flat()
-          .includes(OPEN + BOMB)
-          ? 'game over'
-          : detectWin(newUserInputs, newBombMap)
-            ? 'you win'
-            : 'playing'}
-      </div>
-      <div className={styles.userInputs}>
-        {makeGameBoard(newUserInputs, newBombMap).map((row, y) =>
+      <div className={styles.userInputs} style={{ width: 30 * WIDTH, height: 30 * HEIGHT }}>
+        {userInputs.map((row, y) =>
           row.map((column, x) => (
-            <button
-              className={styles.cell}
-              style={{
-                backgroundPosition: controlSplit(column),
-                backgroundColor: column === BOMB + OPEN + OPEN ? 'red' : 'lightgray',
-              }}
-              key={`${x}-${y}`}
-              onClick={() =>
-                clickCell(x, y, userInputs, newUserInputs, bombMap, newBombMap, directions)
-              }
-              onContextMenu={(eventObject) =>
-                rightClickCell(x, y, userInputs, newUserInputs, eventObject)
-              }
-            >
-              {column < OPEN || FLAG <= column ? (
-                <div
-                  className={styles.cellCover}
-                  style={{
-                    backgroundPosition: '-420px',
-                  }}
-                >
-                  <div
-                    className={styles.rightClick}
-                    style={{
-                      backgroundColor: 'gray',
-                      backgroundPosition:
-                        column >= FLAG + QUESTION ? '-240px' : column >= FLAG ? '-270px' : '-420px',
-                    }}
-                  >
-                    {/* {column} */}
-                  </div>
-                </div>
-              ) : (
-                // OPEN < column < FLAGのとき
-                <div />
-              )}
-            </button>
+            <div className={styles.cell} key={`${x}-${y}`}>
+              {column}
+            </div>
           )),
         )}
       </div>
     </div>
   );
 }
-
-//#TODOとりあえずonclickで実装いづれはmouseDownとmouseUpで動作を分ける
