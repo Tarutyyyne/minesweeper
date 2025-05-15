@@ -25,17 +25,18 @@
   width: 30px;
   height: 30px;
   font-size: 10px;
-  color: orangered;
+  color: black;
 
   /* background: url('~/src/assets/images/icons.png') no-repeat; */
   background-color: lightgray;
   border: 1px solid black;
 }
 
-/* .cellCover {
+.cellCover {
   width: 29px;
   height: 29px;
-  background: url('~/src/assets/images/icons.png') no-repeat;
+
+  /* background: url('~/src/assets/images/icons.png') no-repeat; */
   background-color: black;
 }
 
@@ -44,4 +45,4 @@
   height: 29px;
   background: url('~/src/assets/images/icons.png') no-repeat;
   background-color: gray;
-} */
+}
