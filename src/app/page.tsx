@@ -97,7 +97,7 @@ export default function Home() {
       }
     }
     //予測値を書く
-    const copyGameBoard: number[] = structuredClone(gameBoard).flat();
+    const copyGameBoard: number[] = structuredClone(mineMap).flat();
     const mineCoordinateArray: number[] = [];
     for (let i = 0; i < WIDTH * HEIGHT; i++) {
       if (copyGameBoard[i] !== BOMB) {
@@ -106,6 +106,7 @@ export default function Home() {
         mineCoordinateArray.push(i);
       }
     }
+    console.log(mineCoordinateArray);
     for (let j = 0; j < HOW_MANY_BOMB; j++) {
       const mineX: number = Math.floor(mineCoordinateArray[j] / WIDTH);
       const mineY: number = mineCoordinateArray[j] % HEIGHT;
