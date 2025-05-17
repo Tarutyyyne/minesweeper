@@ -10,7 +10,7 @@
 
 .userInputs {
   display: flex;
-  flex-flow: column wrap;
+  flex-flow: wrap;
   align-items: center;
   justify-content: center;
   width: 270px;
