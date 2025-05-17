@@ -86,6 +86,18 @@ export default function Home() {
   const [bombMap, setBombMap] = useState(copyDefaultBoard);
   const newBombMap: number[][] = structuredClone(bombMap);
 
+  //今からuserInputsとbombMapを一つにまとめたgameBoardを計算値として求まるように書く
+  const makeGameBoard = (userInputs: number[][], bombMap: number[][]): number[][] => {
+    const gameBoard: number[][] = createBoard(WIDTH, HEIGHT);
+    for (let i = 0; i < HEIGHT; i++) {
+      for (let j = 0; j < WIDTH; j++) {
+        gameBoard[i][j] = bombMap[i][j] + userInputs[i][j];
+      }
+    }
+    return gameBoard;
+  };
+  makeGameBoard(userInputs, bombMap);
+
   const clickCell = (
     clickX: number,
     clickY: number,
@@ -106,7 +118,7 @@ export default function Home() {
         className={styles.userInputs}
         style={{ width: `${30 * WIDTH}px`, height: `${30 * HEIGHT}px` }}
       >
-        {bombMap.map((row, y) =>
+        {makeGameBoard(userInputs, bombMap).map((row, y) =>
           row.map((column, x) => (
             <button
               className={styles.cell}
